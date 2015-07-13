@@ -17,6 +17,8 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 
+np..set_printoptions(threshold=numpy.nan)
+
 # transition_matrixの各行（or列）と[行動0の人数, 行動1の人数, 行動2の人数,...]を対応付ける
 def make_state_players(num_players, num_actions):
     if num_actions == 1:
@@ -104,7 +106,7 @@ def is_best_response(profit_matrix, state, current_action, new_action):
     return 1.0 / length if new_action in best_action else 0
 
 
-def kmr_markov_matrix(profit_matrix, num_players, num_actions, epsilon):
+def kmr_markov_matrix(profit_matrix, num_players, num_actions, epsilon, **kwargs):
     """
     KMRの遷移行列を返す（対称行列ゲームだけを考慮）
 
@@ -124,6 +126,12 @@ def kmr_markov_matrix(profit_matrix, num_players, num_actions, epsilon):
     transition_matrix: ndarray(float, ndim=2)
         遷移行列
     """
+    # 1度何人が行動変更の機会を得るか
+    # 暇な時に対応する（現状は逐次改訂のみ）
+    num_changable = 1 #kwargs.get('num_changable', 1)
+    if num_changable == 'all':
+        num_changable = num_players
+
     num_states = sc.misc.comb(num_players+num_actions-1, num_actions-1, exact=True)
     
     # どの行動をとっているプレイヤーを何人増減させれば、推移できるか
@@ -137,9 +145,16 @@ def kmr_markov_matrix(profit_matrix, num_players, num_actions, epsilon):
     state_players_list = make_state_players(num_players, num_actions)
     move_matrix = make_move_matrix(num_players, num_actions, state_players_list)
 
+    # 状態遷移に最低何人の人が行動を変更する必要があるか
+    move_costs = np.zeros((num_states, num_states), dtype=int)
+    for i in range(num_states):
+        for j in range(num_states):
+            move_players = move_matrix[i][j]
+            move_costs[i][j] = np.sum(np.fabs(move_players)) / 2
+
     # is_movable: 推移行列の各要素が推移可能か
-    # 2人以上動かさなければ実現できない組み合わせはダメ
-    not_movable = np.where(np.fabs(move_matrix) > 1)
+    # 一度に行動を変更できる人数以上に動かさなければ実現できない組み合わせはダメ
+    not_movable = np.where(move_costs > num_changable)
     is_movable = np.ones((num_states, num_states), dtype=bool)
     is_movable[not_movable[0:2]] = False
 
@@ -357,15 +372,16 @@ if __name__ == '__main__':
              [5, 7, 5],
              [0, 5, 8]]
 
-    kmr = KMR(array, 10, 0.1)
+    kmr = KMR(array, 10, 0.01)
+    
 
     state_players = kmr.state_players
     stationary_distribution = kmr.compute_stationary_distribution()[0]
-
     for p, d in zip(state_players, stationary_distribution):
         print("{0}: {1:.3f}".format(p, d))
 
 
     kmr.plot_simulation(1000)
+    
 
 
