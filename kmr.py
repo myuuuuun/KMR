@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
 
-np..set_printoptions(threshold=50)
+np.set_printoptions(threshold=50)
 
 # transition_matrixの各行（or列）と[行動0の人数, 行動1の人数, 行動2の人数,...]を対応付ける
 def make_state_players(num_players, num_actions):
