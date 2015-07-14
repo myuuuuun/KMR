@@ -372,7 +372,7 @@ if __name__ == '__main__':
              [5, 7, 5],
              [0, 5, 8]]
 
-    kmr = KMR(array, 10, 0.01)
+    kmr = KMR(array, 10, 0.1)
     
 
     state_players = kmr.state_players
@@ -381,7 +381,7 @@ if __name__ == '__main__':
         print("{0}: {1:.3f}".format(p, d))
 
 
-    kmr.plot_simulation(1000)
+    kmr.plot_simulation(100000)
     
 
 
